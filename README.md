@@ -1,2 +1,2 @@
 # personal project
- This is where I upload all my personal project just as a passion.
+ This is where I upload all my personal projects as a passion.
