@@ -1,17 +1,6 @@
 // This program is to generate a regular minimal 9 X 9 sudoku.
-// It generates based on the seed template below.
-// 123|456|789
-// 456|789|123
-// 789|123|456
-// ---+---+---
-// 891|234|567
-// 234|567|891
-// 567|891|234
-// ---+---+---
-// 678|912|345
-// 912|345|678
-// 345|678|912
-// Then, it randomly removes a cell and uses backtracking (aka brutefore) to try to solve the grid.
+// It generates using reverse backtracking to fill up the grid.
+// Then, it randomly removes a cell and uses backtracking to try to solve the grid.
 // If the cell can be removed, it stays removed, or else, it is declared as taboo cell.
 // The process continues until all cells are removed or tabooed.
 
@@ -153,80 +142,30 @@ void ArrangeEmpties()
 // PSEUDO-RANDOMLY GENERATING SUDOKU //
 ///////////////////////////////////////
 
-//FILLING THE FIRST ROW
-void FillLine1()
+//RANDOMLY SELECTING AN LABEL ORDER TO FILL UP THE CELL
+void Randomize()
 {
-	int taken[9], temp;
+	int temp;
 	bool repeat;
 	
-	for (int i = 0;i < 9;i++)
-	{
-		do
-		{
-			repeat = false;
-			temp = rand() % 9 + 1;
-			for(int j = 0;j<i;j++)
-				if (taken[j] == temp)
+	for (int i = 0;i < 9;i++) 
+		for (int j = 0;j < 9;j++)
+			for (int k = 0; k < 9; k++)
+			{
+				do
 				{
-					repeat = true;
-					break;
-				}
-		}while(repeat);
-		
-		taken[i] = temp;
-		grid[0][i] = label[temp-1];
-	}
-}
-
-//DUPLICATE AND SHIFT TO THE NEXT ROW
-void Shift(int row1, int row2, int shift)
-{
-	for (int i = 0;i < 9;i++)
-		grid[row2][i] = grid[row1][(i+shift) % 9];
-}
-
-//RANDOMLY SWAPPING 2 ROWS
-void SwapRow(int group)
-{
-	int temp, steps = rand() % 4;
-	int row1, row2;
-	
-	while(steps--)
-	{
-		row1 = rand() % 3;
-		row2 = (row1 + 1) % 3;
-		row1 += 3 * group;
-		row2 += 3 * group;
-		
-		for (int i = 0;i < 9;i++)
-		{
-			temp = grid[row1][i];
-			grid[row1][i] = grid[row2][i];
-			grid[row2][i] = temp;
-		}
-	}
-}
-
-//RANDOMLY SWAPPING 2 COLUMNS
-void SwapCol(int group)
-{
-	int temp, steps = rand() % 4;
-	int col1, col2;
-	
-	while(steps--)
-	{
-		col1 = rand() % 3;
-		col2 = (col1 + 1) % 3;
-		col1 += 3 * group;
-		col2 += 3 * group;
-		
-		for (int i = 0;i < 9;i++)
-		{
-			temp = grid[i][col1];
-			grid[i][col1] = grid[i][col2];
-			grid[i][col2] = temp;
-		}
-	}
+					repeat = false;
+					temp = rand() % 9;
+					for(int l = 0;l < k;l++)
+						if (select[i][j][l] == temp)
+						{
+							repeat = true;
+							break;
+						}
+				}while(repeat);
+				
+				select[i][j][k] = temp;
+			}
 }
 
 //SELECTING 3 CLUES TO BE DELETED
@@ -269,24 +208,45 @@ void PrintGrid()
 	}
 }
 
+//RANDOMLY SELECTING A LABEL FOR THE CELL
+void GenCell(int k)
+{
+	if (solution) return;
+	if (k == 9 * 9)
+	{
+		solution++;
+		
+		for (int i = 0 ; i < 9 ; i++)
+			for (int j = 0 ; j < 9 ; j++)
+				sol[i][j] = grid[i][j];
+				
+		return;
+	}
+
+	int r = k / 9, c = k % 9;
+	
+	for (int i = 0 ; i< 9;i++)
+	{
+		grid[r][c] = label[select[r][c][i]];
+		if (!isBad(k))
+			GenCell(k+1);
+		grid[r][c] = label[9];
+	}
+	return;
+}
+
 //GENERATE GRID
 void Generate()
 {
-	FillLine1();
-	Shift(0,1,3);
-	Shift(1,2,3);
-	Shift(2,3,1);
-	Shift(3,4,3);
-	Shift(4,5,3);
-	Shift(5,6,1);
-	Shift(6,7,3);
-	Shift(7,8,3);
-	SwapRow(0);
-	SwapRow(1);
-	SwapRow(2);
-	SwapCol(0);
-	SwapCol(1);
-	SwapCol(2);
+	for (int i = 0;i< 81;i++)
+		for (int j = 0;j < 2;j++)
+			grid[i / 9][i % 9] = label[9];
+	solution = 0;
+	Randomize();
+	GenCell(0);
+	
+	for (int i = 0;i< 81;i++)
+		grid[i / 9][i % 9] = sol[i / 9][i % 9];
 }
 
 
